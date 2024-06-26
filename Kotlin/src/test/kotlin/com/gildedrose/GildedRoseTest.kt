@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test
 
 internal class GildedRoseTest {
 
-    val repeatNumber = 100
+    private val repeatNumber = 100
 
     @Test
     fun checkTimePasses() {
-        val items = listOf(Item("BasicItem", 5, 25)) // name, sellIn, quality
+        val items = listOf(ItemType("BasicItem", 5, 25, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         app.updateQuality()
@@ -20,7 +20,7 @@ internal class GildedRoseTest {
 
     @Test
     fun checkQualityDegradesTwiceAsFastAfterSellByDate() {
-        val items = listOf(Item("Item", 3, 20)) // name, sellIn, quality
+        val items = listOf(ItemType("Item", 3, 20, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         app.updateQuality()
@@ -41,7 +41,7 @@ internal class GildedRoseTest {
 
     @Test
     fun checkQualityIsPositive() { // worth implementing this test for more items?
-        val items = listOf(Item("new item", 4, 21)) // name, sellIn, quality
+        val items = listOf(ItemType("new item", 4, 21, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         repeat(repeatNumber) {
@@ -52,7 +52,7 @@ internal class GildedRoseTest {
 
     @Test
     fun checkAgedBrieIncreasesInQuality() {
-        val items = listOf(Item("Aged Brie", 6, 22)) // name, sellIn, quality
+        val items = listOf(ItemType("Aged Brie", 6, 22, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         app.updateQuality()
@@ -62,7 +62,7 @@ internal class GildedRoseTest {
 
     @Test
     fun checkQualityIsUnder50() {
-        val items = listOf(Item("newitem", 7, 23)) // name, sellIn, quality
+        val items = listOf(ItemType("newitem", 7, 23, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         repeat(repeatNumber) {
@@ -73,7 +73,7 @@ internal class GildedRoseTest {
 
     @Test
     fun checkSulfurasNeverHasToBeSold() {
-        val items = listOf(Item("Sulfuras, Hand of Ragnaros", 0, 80)) // name, sellIn, quality
+        val items = listOf(ItemType("Sulfuras, Hand of Ragnaros", 0, 80, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         repeat(repeatNumber) {
@@ -84,7 +84,7 @@ internal class GildedRoseTest {
 
     @Test
     fun checkSulfurasNeverDecreasesQuality() {
-        val items = listOf(Item("Sulfuras, Hand of Ragnaros", 0, 80)) // name, sellIn, quality
+        val items = listOf(ItemType("Sulfuras, Hand of Ragnaros", 0, 80, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         repeat(repeatNumber) {
@@ -95,7 +95,7 @@ internal class GildedRoseTest {
 
     @Test
     fun checkBackstagePassIncreaseInQualityBeforeConcert() {
-        val items = listOf(Item("Backstage passes to a TAFKAL80ETC concert", 12, 5)) // name, sellIn, quality
+        val items = listOf(ItemType("Backstage passes to a TAFKAL80ETC concert", 12, 5, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         var currentQuality = app.items[0].quality
@@ -111,14 +111,14 @@ internal class GildedRoseTest {
 
     @Test
     fun checkBackstagePassQualityIncreasesBy2With5to10DaysToGo() {
-        val items = listOf(Item("Backstage passes to a TAFKAL80ETC concert", 12, 5)) // name, sellIn, quality
+        val items = listOf(ItemType("Backstage passes to a TAFKAL80ETC concert", 12, 5, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         var currentQuality = app.items[0].quality
 
         repeat(repeatNumber) {
             app.updateQuality()
-            if (app.items[0].sellIn < 11 && app.items[0].sellIn > 5){
+            if (app.items[0].sellIn in 6..10){
                 assertEquals(app.items[0].quality, currentQuality + 2)
                 currentQuality = app.items[0].quality
             }
@@ -127,13 +127,13 @@ internal class GildedRoseTest {
 
     @Test
     fun checkBackstagePassQualityIncreasesBy3With5DaysToGo() {
-        val items = listOf(Item("Backstage passes to a TAFKAL80ETC concert", 12, 5)) // name, sellIn, quality
+        val items = listOf(ItemType("Backstage passes to a TAFKAL80ETC concert", 12, 5, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         repeat(repeatNumber) {
             val currentQuality = app.items[0].quality
             app.updateQuality()
-            if (app.items[0].sellIn < 5 && app.items[0].sellIn > 0){ // if sellIn < 5, then was < 6 before the update
+            if (app.items[0].sellIn in 1..4){ // if sellIn < 5, then was < 6 before the update
                 assertEquals(app.items[0].quality, currentQuality + 3)
             }
 
@@ -142,7 +142,7 @@ internal class GildedRoseTest {
 
     @Test
     fun checkBackStagePassQualityDropsTo0AfterConcert(){
-        val items = listOf(Item("Backstage passes to a TAFKAL80ETC concert", 12, 5)) // name, sellIn, quality
+        val items = listOf(ItemType("Backstage passes to a TAFKAL80ETC concert", 12, 5, false)) // name, sellIn, quality
         val app = GildedRose(items)
 
         repeat(repeatNumber) {
@@ -153,7 +153,65 @@ internal class GildedRoseTest {
         }
     }
 
+    @Test
+    fun checkConjuredItemQualityDegradesTwiceAsFast() {
+        val items = listOf(
+            ItemType("Basic", 10, 10, false),
+            ItemType("BasicPastSellBy", -1, 10, false),
+            ItemType("Aged Brie", 10, 10, false),
+            ItemType("Sulfuras, Hand of Ragnaros", 0, 80, false),
+            ItemType("Backstage passes to a TAFKAL80ETC concert", 12, 10, false),
+            ItemType("Backstage passes to a TAFKAL80ETC concert", 8, 10, false),
+            ItemType("Backstage passes to a TAFKAL80ETC concert", 2, 10, false),
+            ItemType("Backstage passes to a TAFKAL80ETC concert", -2, 0, false))
 
+        val conjuredItems = listOf(
+            ItemType("Basic", 10, 10, true),
+            ItemType("BasicPastSellBy", -1, 10, true),
+            ItemType("Aged Brie", 10, 10, true),
+            ItemType("Sulfuras, Hand of Ragnaros", 0, 80, true),
+            ItemType("Backstage passes to a TAFKAL80ETC concert", 12, 10, true),
+            ItemType("Backstage passes to a TAFKAL80ETC concert", 8, 10, true),
+            ItemType("Backstage passes to a TAFKAL80ETC concert", 2, 10, true),
+            ItemType("Backstage passes to a TAFKAL80ETC concert", -2, 0, true))
+
+        val app = GildedRose(items)
+        val conjuredApp = GildedRose(conjuredItems)
+
+        app.updateQuality()
+        conjuredApp.updateQuality()
+
+        val degradeRates = LinkedHashMap<String, Int>()
+        degradeRates["Basic"] = 10 - app.items[0].quality
+        degradeRates["BasicPastSellBy"] = 10 - app.items[1].quality
+        degradeRates["Aged Brie"] = 10 - app.items[2].quality
+        degradeRates["Sulfuras"] = 80 - app.items[3].quality
+        degradeRates["Backstage12Days"] = 10 - app.items[4].quality
+        degradeRates["Backstage8Days"] = 10 - app.items[5].quality
+        degradeRates["Backstage2Days"] = 10 - app.items[6].quality
+        degradeRates["BackstageAfterConcert"] = 0 - app.items[7].quality
+
+        val conjuredDegradeRates = LinkedHashMap<String, Int>()
+        conjuredDegradeRates["Basic"] = 10 - conjuredApp.items[0].quality
+        conjuredDegradeRates["BasicPastSellBy"] = 10 - conjuredApp.items[1].quality
+        conjuredDegradeRates["Aged Brie"] = 10 - conjuredApp.items[2].quality //TODO: implement conjured aged brie and backstage passes (int will not work)
+        conjuredDegradeRates["Sulfuras"] = 80 - conjuredApp.items[3].quality
+        conjuredDegradeRates["Backstage12Days"] = 10 - conjuredApp.items[4].quality
+        conjuredDegradeRates["Backstage8Days"] = 10 - conjuredApp.items[5].quality
+        conjuredDegradeRates["Backstage2Days"] = 10 - conjuredApp.items[6].quality
+        conjuredDegradeRates["BackstageAfterConcert"] = 0 - conjuredApp.items[7].quality
+
+        assertEquals(conjuredDegradeRates["Basic"], 2 * degradeRates["Basic"]!!)
+        assertEquals(conjuredDegradeRates["BasicPastSellBy"], 2 * degradeRates["BasicPastSellBy"]!!)
+        assertEquals(conjuredDegradeRates["Sulfuras"], 2 * degradeRates["Sulfuras"]!!)
+        //assertEquals(conjuredDegradeRates["Backstage12Days"], 2 * degradeRates["Backstage12Days"]!!)
+        //assertEquals(conjuredDegradeRates["Backstage8Days"], 2 * degradeRates["Backstage8Days"]!!)
+        //assertEquals(conjuredDegradeRates["Backstage2Days"], 2 * degradeRates["Backstage2Days"]!!)
+        assertEquals(conjuredDegradeRates["BackstageAfterConcert"], 2 * degradeRates["BackstageAfterConcert"]!!)
+        //assertEquals(conjuredDegradeRates["Aged Brie"], 2 * degradeRates["Aged Brie"]!!)
+
+        // get list of items and find their degrade rate and then check that it doubles when conjured
+    }
 
 }
 
